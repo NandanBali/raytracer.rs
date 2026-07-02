@@ -1,5 +1,7 @@
 use std::{fs::File, io::Write, ops};
 
+use crate::helpers;
+
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3(pub f64, pub f64, pub f64);
 
@@ -57,19 +59,17 @@ impl ops::Div<f64> for Vec3 {
 pub type Color = Vec3;
 
 impl Color {
+    fn clmp(val: f64) -> u8 {
+        255 * helpers::clamp(val, 0., 0.999) as u8
+    }
+
     pub fn write_color(file: &mut File, color: Color) {
         let color_string = format!(
             "{} {} {}",
-            (255.99 * color.0) as u8,
-            (255.99 * color.1) as u8,
-            (255.99 * color.2) as u8,
+            Color::clmp(color.0),
+            Color::clmp(color.1),
+            Color::clmp(color.2)
         );
         let _ = writeln!(file, "{}", color_string);
-    }
-}
-
-impl From<String> for Color {
-    fn from(value: String) -> Self {
-        unimplemented!()
     }
 }
