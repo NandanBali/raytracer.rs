@@ -45,6 +45,6 @@ fn main() {
         radius: 100.,
     }));
 
-    let mut camera = Camera::new(file, world);
-    camera.render(IMAGE_HEIGHT as usize, IMG_WIDTH as usize);
+    let mut camera = Camera::new(file, world, IMAGE_HEIGHT as usize, IMG_WIDTH as usize);
+    camera.render();
 }

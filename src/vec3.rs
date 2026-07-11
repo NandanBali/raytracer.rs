@@ -10,6 +10,15 @@ impl Vec3 {
         let sum = self.0.powf(2.) + self.1.powf(2.) + self.2.powf(2.);
         *self / sum.sqrt()
     }
+
+    pub fn random(min: Option<f64>, max: Option<f64>) -> Vec3 {
+        let (min, max) = (min.unwrap_or(0.), max.unwrap_or(1.));
+        let x = rand::random_range(min..max);
+        let y = rand::random_range(min..max);
+        let z = (x + y) / 2.;
+
+        Vec3(x, y, z)
+    }
 }
 
 impl ops::Add for Vec3 {
@@ -60,7 +69,7 @@ pub type Color = Vec3;
 
 impl Color {
     fn clmp(val: f64) -> u8 {
-        255 * helpers::clamp(val, 0., 0.999) as u8
+        (255. * helpers::clamp(val, 0., 0.999)) as u8
     }
 
     pub fn write_color(file: &mut File, color: Color) {
