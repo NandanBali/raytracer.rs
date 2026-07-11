@@ -50,7 +50,7 @@ impl Camera {
                let mut color = Vec3 (0., 0., 0.);
                 for _ in 0..10 {
                     let r = self.antialiasing_ray(x, y);
-                    color = color + self.color_at(&r);
+                    color = color + self.color_at(&r, 50);
                 }
                 color = color / 10.;
                 Color::write_color(&mut self.file, color);
@@ -58,10 +58,15 @@ impl Camera {
         }
     }
 
-    fn color_at(&self, ray: &Ray) -> Color {
+    fn color_at(&self, ray: &Ray, depth: i32) -> Color {
+        // no more light is gathered once we exceed the bounce limit
+        if depth <= 0 {
+            return Vec3(0., 0., 0.);
+        }
         // declare sphere
-        if let Some(res) = self.world.hit(ray, (0., f64::INFINITY)) {
-            return (res.normal + 1.) * 0.5;
+        if let Some(res) = self.world.hit(ray, (0.0001, f64::INFINITY)) {
+            let direction = res.normal + Vec3::random_unit_vector();
+            return self.color_at(&Ray { origin: res.point, direction }, depth - 1) * 0.75;
         }
         let ht = 0.5 * (ray.direction.unit().1 + 1.);
         (Vec3(1., 1., 1.) * (1. - ht)) + (Vec3(0.5, 0.7, 1.) * ht)

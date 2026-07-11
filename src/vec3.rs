@@ -1,5 +1,4 @@
 use std::{fs::File, io::Write, ops};
-
 use crate::helpers;
 
 #[derive(Clone, Copy, Debug)]
@@ -11,13 +10,34 @@ impl Vec3 {
         *self / sum.sqrt()
     }
 
-    pub fn random(min: Option<f64>, max: Option<f64>) -> Vec3 {
-        let (min, max) = (min.unwrap_or(0.), max.unwrap_or(1.));
+    pub fn random() -> Vec3 {
+        let (min, max) = (0., 1.);
         let x = rand::random_range(min..max);
         let y = rand::random_range(min..max);
-        let z = (x + y) / 2.;
+        let z = rand::random_range(min..max);
 
         Vec3(x, y, z)
+    }
+
+    /// generates a ray that is 1) normalized 2) inside the sphere
+    pub fn random_unit_vector() -> Vec3 {
+        loop {
+            let p = (Vec3::random() * 2.) + -1.;
+            let len = (p.0 * p.0) + (p.1 * p.1) + (p.2 * p.2);
+            if 0.0000001 < len && len < 1. {
+                return p / len.sqrt();
+            }
+        }
+    }
+
+    /// inverts the ray if it's pointing into the hemisphere
+    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+        let rn = Self::random_unit_vector();
+        if rn * (*normal) > 0. {
+            rn
+        } else {
+            rn * -1.
+        }
     }
 }
 
@@ -72,12 +92,19 @@ impl Color {
         (255. * helpers::clamp(val, 0., 0.999)) as u8
     }
 
+    fn l2g(lc: f64) -> f64 {
+        if lc > 0. {
+            return lc.sqrt();
+        }
+        0.
+    }
+
     pub fn write_color(file: &mut File, color: Color) {
         let color_string = format!(
             "{} {} {}",
-            Color::clmp(color.0),
-            Color::clmp(color.1),
-            Color::clmp(color.2)
+            Color::clmp(Self::l2g(color.0)),
+            Color::clmp(Self::l2g(color.1)),
+            Color::clmp(Self::l2g(color.2))
         );
         let _ = writeln!(file, "{}", color_string);
     }

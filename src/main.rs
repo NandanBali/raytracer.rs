@@ -37,7 +37,7 @@ fn main() {
 
     world.add_obj(Box::new(Sphere {
         center: Vec3(0., 0., -1.),
-        radius: 0.35,
+        radius: 0.5,
     }));
 
     world.add_obj(Box::new(Sphere {
