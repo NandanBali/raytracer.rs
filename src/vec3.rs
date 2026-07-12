@@ -1,5 +1,6 @@
 use std::{fs::File, io::Write, ops};
 use crate::helpers;
+use crate::ray::Ray;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3(pub f64, pub f64, pub f64);
@@ -38,6 +39,22 @@ impl Vec3 {
         } else {
             rn * -1.
         }
+    }
+
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self.0.abs() < s && self.1.abs() < s && self.2.abs() < s
+    }
+
+    pub fn reflected_direction(normal: &Vec3, inbound: &Vec3) -> Vec3 {
+        let v = inbound.clone();
+        let n = normal.clone();
+
+        v - n * (v * n * 2.)
+    }
+    
+    pub fn stmul(v1: Vec3, v2: Vec3) -> Vec3 {
+        Vec3 (v1.0 * v2.0, v1.1 * v2.1, v1.2 * v2.2)
     }
 }
 

@@ -1,10 +1,13 @@
-use crate::{ray::Ray, vec3::Vec3};
+use std::rc::Rc;
+use crate::{material, ray::Ray, vec3::Vec3};
+use crate::material::Material;
 
 pub struct HitData {
     pub point: Vec3,
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
+    pub material: Rc<dyn Material>,
 }
 
 impl HitData {
@@ -25,6 +28,7 @@ pub trait Object {
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
+    pub material: Rc<dyn Material>
 }
 
 impl Object for Sphere {
@@ -58,6 +62,7 @@ impl Object for Sphere {
             normal,
             t: proot,
             front_face: false,
+            material: self.material.clone()
         };
 
         res.set_facenormal(ray, &normal);
