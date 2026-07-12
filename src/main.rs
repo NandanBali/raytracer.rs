@@ -1,8 +1,10 @@
+use crate::material::{Dielectric, Lambertian, Material, Metal};
 use crate::{
     camera::Camera,
     object::{Sphere, World},
     vec3::Vec3,
 };
+use rand::random_range;
 use std::rc::Rc;
 use std::{fs::File, fs::OpenOptions, io::Write};
 
@@ -33,35 +35,96 @@ fn init_file() -> File {
     file
 }
 
+fn add_random_spheres(world: &mut World) {
+    for a in -11..11 {
+        for b in -11..11 {
+            let center = Vec3(
+                a as f64 + random_range(0. ..0.9),
+                0.2,
+                b as f64 + random_range(0. ..0.9),
+            );
+            // keep the small spheres clear of the big metal one
+            if (center - Vec3(4., 0.2, 0.)).length() <= 0.9 {
+                continue;
+            }
+
+            let choose = random_range(0. ..1.);
+            let material: Rc<dyn Material> = if choose < 0.8 {
+                Rc::new(Lambertian {
+                    albedo: Vec3::stmul(Vec3::random(), Vec3::random()),
+                })
+            } else if choose < 0.95 {
+                Rc::new(Metal {
+                    albedo: Vec3(
+                        random_range(0.5..1.),
+                        random_range(0.5..1.),
+                        random_range(0.5..1.),
+                    ),
+                    fuzz: random_range(0. ..0.5),
+                })
+            } else {
+                Rc::new(Dielectric {
+                    refraction_index: 1.5,
+                })
+            };
+
+            world.add_obj(Box::new(Sphere {
+                center,
+                radius: 0.2,
+                material,
+            }));
+        }
+    }
+}
+
 fn main() {
     let file = init_file();
     let mut world = World::new();
 
-    let metal_material = Rc::new(material::Metal {albedo: Vec3(0.8, 0.8, 0.8)});
     world.add_obj(Box::new(Sphere {
-        center: Vec3(0., 0., -1.2),
-        radius: 0.5,
-        material: Rc::new(material::Lambertian {albedo: Vec3(0.8, 0.6, 0.2)})
+        center: Vec3(0., -1000., 0.),
+        radius: 1000.,
+        material: Rc::new(Lambertian {
+            albedo: Vec3(0.5, 0.5, 0.5),
+        }),
     }));
 
-    world.add_obj(Box::new(Sphere {
-        center: Vec3(-1., 0., -1.),
-        radius: 0.5,
-        material: metal_material.clone()
-
-    }));
+    add_random_spheres(&mut world);
 
     world.add_obj(Box::new(Sphere {
-        center: Vec3(1., 0., -1.),
-        radius: 0.4,
-        material: metal_material.clone()
+        center: Vec3(0., 1., 0.),
+        radius: 1.,
+        material: Rc::new(Dielectric {
+            refraction_index: 1.5,
+        }),
     }));
     world.add_obj(Box::new(Sphere {
-        center: Vec3(0., -100.5, -1.),
-        radius: 100.,
-        material: Rc::new(material::Lambertian {albedo: Vec3(0.8, 0.8, 0.)})
+        center: Vec3(-4., 1., 0.),
+        radius: 1.,
+        material: Rc::new(Lambertian {
+            albedo: Vec3(0.4, 0.2, 0.1),
+        }),
+    }));
+    world.add_obj(Box::new(Sphere {
+        center: Vec3(4., 1., 0.),
+        radius: 1.,
+        material: Rc::new(Metal {
+            albedo: Vec3(0.7, 0.6, 0.5),
+            fuzz: 0.,
+        }),
     }));
 
-    let mut camera = Camera::new(file, world, IMAGE_HEIGHT as usize, IMG_WIDTH as usize);
+    let mut camera = Camera::new(
+        file,
+        world,
+        IMAGE_HEIGHT as usize,
+        IMG_WIDTH as usize,
+        20.,
+        Vec3(13., 2., 3.),
+        Vec3(0., 0., 0.),
+        Vec3(0., 1., 0.),
+        0.6,
+        10.,
+    );
     camera.render();
 }
