@@ -73,12 +73,14 @@ impl ParallelRenderer {
 
     fn render_pixel(&self, x: i32, y: i32) -> Color {
         let mut color = Vec3(0., 0., 0.);
-        for _ in 0..30 {
-            let r = self.camera.antialiasing(x, y);
-            color = color + self.color_at(&r, 50);
-        }
-        color = color / 30.;
-        color
+        let rayt: Vec<i32> = (0..30).collect();
+        let color = rayt
+            .into_par_iter()
+            .map(|_| self.camera.antialiasing(x, y))
+            .collect::<Vec<Ray>>()
+            .iter()
+            .fold(color, |acc, x| acc + self.color_at(x, 50));
+        color / 30.
     }
 }
 impl Renderer for ParallelRenderer {
@@ -90,9 +92,10 @@ impl Renderer for ParallelRenderer {
         let coords: Vec<(i32, i32)> = (0..self.camera.image_height)
             .flat_map(|y| (0..self.camera.image_width).map(move |x| (x, y)))
             .collect();
-        let results = coords.into_par_iter().map(move |(x,y)| {
-            self.render_pixel(x, y)
-       }).collect::<Vec<Vec3>>();
+        let results = coords
+            .into_par_iter()
+            .map(move |(x, y)| self.render_pixel(x, y))
+            .collect::<Vec<Vec3>>();
 
         println!("writing to file now");
         for color in results {
