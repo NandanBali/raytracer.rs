@@ -1,11 +1,12 @@
 use crate::material::{Dielectric, Lambertian, Material, Metal};
+use crate::renderer::{ParallelRenderer, Renderer, SimpleRenderer};
 use crate::{
     camera::Camera,
     object::{Sphere, World},
     vec3::Vec3,
 };
 use rand::random_range;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::{fs::File, fs::OpenOptions, io::Write};
 
 mod camera;
@@ -14,9 +15,10 @@ mod material;
 mod object;
 mod ray;
 mod vec3;
+mod renderer;
 
 const PATH: &str = "output.ppm";
-const ASPECT_RATIO: f64 = 16_f64 / 9_f64;
+const ASPECT_RATIO: f64 = 16_f64 / 10_f64;
 const IMG_WIDTH: u32 = 512;
 const IMAGE_HEIGHT: u32 = (IMG_WIDTH as f64 / ASPECT_RATIO) as u32;
 
@@ -49,12 +51,12 @@ fn add_random_spheres(world: &mut World) {
             }
 
             let choose = random_range(0. ..1.);
-            let material: Rc<dyn Material> = if choose < 0.8 {
-                Rc::new(Lambertian {
+            let material: Arc<dyn Material + Send + Sync> = if choose < 0.8 {
+                Arc::new(Lambertian {
                     albedo: Vec3::stmul(Vec3::random(), Vec3::random()),
                 })
             } else if choose < 0.95 {
-                Rc::new(Metal {
+                Arc::new(Metal {
                     albedo: Vec3(
                         random_range(0.5..1.),
                         random_range(0.5..1.),
@@ -63,7 +65,7 @@ fn add_random_spheres(world: &mut World) {
                     fuzz: random_range(0. ..0.5),
                 })
             } else {
-                Rc::new(Dielectric {
+                Arc::new(Dielectric {
                     refraction_index: 1.5,
                 })
             };
@@ -78,15 +80,13 @@ fn add_random_spheres(world: &mut World) {
 }
 
 fn main() {
-    let file = init_file();
+    let mut file = init_file();
     let mut world = World::new();
 
     world.add_obj(Box::new(Sphere {
         center: Vec3(0., -1000., 0.),
         radius: 1000.,
-        material: Rc::new(Lambertian {
-            albedo: Vec3(0.5, 0.5, 0.5),
-        }),
+        material: Arc::new(Lambertian {albedo: Vec3(0.33, 0.33, 0.67)}),
     }));
 
     add_random_spheres(&mut world);
@@ -94,29 +94,27 @@ fn main() {
     world.add_obj(Box::new(Sphere {
         center: Vec3(0., 1., 0.),
         radius: 1.,
-        material: Rc::new(Dielectric {
+        material: Arc::new(Dielectric {
             refraction_index: 1.5,
         }),
     }));
     world.add_obj(Box::new(Sphere {
         center: Vec3(-4., 1., 0.),
         radius: 1.,
-        material: Rc::new(Lambertian {
+        material: Arc::new(Lambertian {
             albedo: Vec3(0.4, 0.2, 0.1),
         }),
     }));
     world.add_obj(Box::new(Sphere {
         center: Vec3(4., 1., 0.),
         radius: 1.,
-        material: Rc::new(Metal {
+        material: Arc::new(Metal {
             albedo: Vec3(0.7, 0.6, 0.5),
             fuzz: 0.,
         }),
     }));
 
-    let mut camera = Camera::new(
-        file,
-        world,
+    let camera = Camera::new(
         IMAGE_HEIGHT as usize,
         IMG_WIDTH as usize,
         20.,
@@ -126,5 +124,7 @@ fn main() {
         0.6,
         10.,
     );
-    camera.render();
+
+    let renderer = ParallelRenderer::new(world, camera);
+    renderer.render(&mut file);
 }

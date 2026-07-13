@@ -1,6 +1,5 @@
-use std::{fs::File, io::Write, ops};
 use crate::helpers;
-use crate::ray::Ray;
+use std::{fs::File, io::Write, ops};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3(pub f64, pub f64, pub f64);
