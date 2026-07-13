@@ -4,6 +4,7 @@ use crate::object::{HitData, Sphere};
 use crate::ray::Ray;
 use crate::vec3::{Color, Vec3};
 use std::rc::Rc;
+use std::sync::Arc;
 
 pub trait Material {
     fn scatter(&self, in_ray: &Ray, hit_data: &HitData) -> Option<(Ray, Color)>;
@@ -103,12 +104,12 @@ pub fn hollow_sphere(
     let outer_sphere = Sphere {
         center: position,
         radius,
-        material: Rc::new(Dielectric { refraction_index }),
+        material: Arc::new(Dielectric { refraction_index }),
     };
     let inner_sphere = Sphere {
         center: position,
         radius: radius - thickness,
-        material: Rc::new(Dielectric {
+        material: Arc::new(Dielectric {
             refraction_index: 1. / refraction_index,
         }),
     };

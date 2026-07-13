@@ -1,7 +1,7 @@
 # a simple ray tracer in rust
 
 ### cool stuff
-- parallelization
+- parallelization -> Done, 12x speedup across 16 threads
 - gltf loading
 - non spherical objects
 ### peter shirley pt2 stuff

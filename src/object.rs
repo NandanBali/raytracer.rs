@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::sync::Arc;
 use crate::{material, ray::Ray, vec3::Vec3};
 use crate::material::Material;
 
@@ -7,7 +8,7 @@ pub struct HitData {
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material>,
 }
 
 impl HitData {
@@ -21,14 +22,14 @@ impl HitData {
     }
 }
 
-pub trait Object {
+pub trait Object: Send + Sync {
     fn hit(&self, ray: &Ray, interval: (f64, f64)) -> Option<HitData>;
 }
 
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
-    pub material: Rc<dyn Material>
+    pub material: Arc<dyn Material + Sync + Send>,
 }
 
 impl Object for Sphere {
