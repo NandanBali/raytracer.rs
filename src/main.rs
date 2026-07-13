@@ -19,7 +19,7 @@ mod renderer;
 
 const PATH: &str = "output.ppm";
 const ASPECT_RATIO: f64 = 16_f64 / 10_f64;
-const IMG_WIDTH: u32 = 512;
+const IMG_WIDTH: u32 = 1440;
 const IMAGE_HEIGHT: u32 = (IMG_WIDTH as f64 / ASPECT_RATIO) as u32;
 
 fn init_file() -> File {

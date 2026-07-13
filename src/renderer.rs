@@ -73,14 +73,12 @@ impl ParallelRenderer {
 
     fn render_pixel(&self, x: i32, y: i32) -> Color {
         let mut color = Vec3(0., 0., 0.);
-        let rayt: Vec<i32> = (0..30).collect();
-        let color = rayt
-            .into_par_iter()
-            .map(|_| self.camera.antialiasing(x, y))
-            .collect::<Vec<Ray>>()
-            .iter()
-            .fold(color, |acc, x| acc + self.color_at(x, 50));
-        color / 30.
+        for _ in 0..30 {
+            let r = self.camera.antialiasing(x, y);
+            color = color + self.color_at(&r, 50);
+        }
+        color = color / 30.;
+        color
     }
 }
 impl Renderer for ParallelRenderer {
